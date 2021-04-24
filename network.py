@@ -4,7 +4,6 @@ import RFM69
 from RFM69registers import *
 import datetime
 import time
-import msg
 
 # Handle exit signal gracefully
 import signal
