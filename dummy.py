@@ -33,8 +33,9 @@ print("Waiting for new nodes to identify themselves...")
 radio.receiveBegin()
 while True:
 	if radio.receiveDone():
+		print(f"Message received from node {radio.SENDERID}.")
 		if radio.SENDERID == 0:
-			print(f"Message received from node {radio.SENDERID}, responding with a ping.")
+			print("Responding with a ping.")
 			radio.send(radio.SENDERID) #don't need any ACK
 
 		#We've received and responded to a message, now wait for another

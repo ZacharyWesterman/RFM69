@@ -46,6 +46,20 @@ while timedOut < TIMEOUT:
 
 if not len(NET_NODES):
 	print(f"No nodes found on network {NETWORK}.")
+else:
+	print(f"Found existing nodes: {NET_NODES}")
+
+for i in NET_NODES:
+	if i >= NODE: NODE = i + 1
+
+if NODE >= 255:
+	print(f"Too many nodes on network {NETWORK}! Shutting down.")
+	radio.shutdown()
+	sys.exit(0)
+
+print(f"Broadcasting this node's ID ({NODE})")
+radio.setAddress(NODE)
+radio.send(255)
 
 print("shutting down")
 radio.shutdown()
