@@ -14,13 +14,17 @@ TOSLEEP=0.01
 NETWORK=1
 NODE = 0 #ID 0 is reserved for new nodes
 
+def init_radio(node, network):
+	radio = RFM69.RFM69(RF69_915MHZ, node, network, True)
+	radio.readAllRegs()
+	radio.rcCalibration()
+	radio.setHighPower(True)
+	radio.encrypt("3141592653589793")
+	return radio
+
 # Initialize radio
 print("Initializing radio module...")
-radio = RFM69.RFM69(RF69_915MHZ, NODE, NETWORK, True)
-radio.readAllRegs()
-radio.rcCalibration()
-radio.setHighPower(True)
-radio.encrypt("3141592653589793")
+radio = init_radio(NODE, NETWORK)
 
 # Exit gracefully if SIGINT
 def signal_handler(sig, frame):
@@ -57,8 +61,10 @@ if NODE >= 255:
 	radio.shutdown()
 	sys.exit(0)
 
+print("Reinitializing radio module...")
+radio.shutdown()
+radio = init_radio(NODE, NETWORK)
 print(f"Broadcasting this node's ID ({NODE})")
-radio.setAddress(NODE)
 radio.send(255)
 
 print("shutting down")
