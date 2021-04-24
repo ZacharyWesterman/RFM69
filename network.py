@@ -4,6 +4,7 @@ import RFM69
 from RFM69registers import *
 import datetime
 import time
+import msg
 
 # Handle exit signal gracefully
 import signal
@@ -28,7 +29,7 @@ class network(object):
 		self.radio.setHighPower(True)
 		self.radio.encrypt(ENCRYPTION_KEY)
 
-	def login(self):
+	def login(self, name = "unkn"):
 		global TOSLEEP
 		self.init_radio(0, self.network)
 		self.radio.send(255) # Ping all modules. Since we're node 0 they'll ping us back
@@ -39,6 +40,10 @@ class network(object):
 			#We got a response, log the node ID
 			if self.radio.receiveDone():
 				self.nodes.append(self.radio.SENDERID)
+				if self.radio.ACKRequested():
+					self.radio.sendACK()
+					print("sent ack")
+
 				self.radio.receiveBegin()
 
 			timedOut += TOSLEEP
@@ -72,7 +77,10 @@ class network(object):
 	def handle(self):
 		if self.radio.receiveDone():
 			if self.radio.SENDERID == 0:
-				self.radio.send(self.radio.SENDERID) #don't need any ACK
+				if self.radio.sendWithRetry(self.radio.SENDERID): #don't need any ACK
+					print("Responsed with my ID")
+				else:
+					print("ACK not received")
 			elif self.radio.SENDERID not in self.nodes:
 				self.nodes.append(self.radio.SENDERID)
 				self.nodes.sort()
