@@ -9,78 +9,94 @@ import time
 import signal
 import sys
 
-TIMEOUT=1
 TOSLEEP=0.01
 NETWORK=1
 NODE = 0 #ID 0 is reserved for new nodes
+ENCRYPTION_KEY = "3141592653589793"
 
-def init_radio(node, network):
-	radio = RFM69.RFM69(RF69_915MHZ, node, network, True)
-	radio.readAllRegs()
-	radio.rcCalibration()
-	radio.setHighPower(True)
-	radio.encrypt("3141592653589793")
-	return radio
+class network(object):
+	def __init__(network = 1):
+		self.network = network
+		self.nodes = []
+		self.name = ""
 
-# Initialize radio
-print("Initializing radio module...")
-radio = init_radio(NODE, NETWORK)
+	def init_radio(node, network):
+		global ENCRYPTION_KEY
+		self.radio = RFM69.RFM69(RF69_915MHZ, node, network, True)
+		self.radio.readAllRegs()
+		self.radio.rcCalibration()
+		self.radio.setHighPower(True)
+		self.radio.encrypt(ENCRYPTION_KEY)
+
+	def login():
+		global TOSLEEP
+		self.init_radio(0, self.network)
+		self.radio.send(255) # Ping all modules. Since we're node 0 they'll ping us back
+		self.radio.receiveBegin()
+		timedOut = 0
+		self.nodes = []
+		while timedOut < 1:
+			#We got a response, log the node ID
+			if self.radio.receiveDone():
+				self.nodes.append(self.radio.SENDERID)
+				self.radio.receiveBegin()
+
+			timedOut += TOSLEEP
+			time.sleep(TOSLEEP)
+		self.nodes.sort()
+
+		# Find the first free ID, and take that.
+		newID = 1
+		for i in self.nodes:
+			if i > newID: break
+			newID += 1
+
+		# Throw exception if network is over-saturated
+		if newID >= 255:
+			self.radio.shutdown()
+			raise f"Too many nodes on network {self.network}!"
+
+		# Reinitialize radio module and broadcast new ID
+		self.radio.shutdown()
+		self.init_radio(newID, self.network)
+		self.radio.send(255)
+
+		# Be ready to receive
+		self.radio.receiveBegin()
+
+	def logout():
+		# TODO: let other nodes know you're not there anymore
+		self.radio.shutdown()
+
+	#handle messages
+	def handle():
+		if self.radio.receiveDone():
+			if self.radio.SENDERID == 0:
+				self.radio.send(radio.SENDERID) #don't need any ACK
+			elif radio.SENDERID not in self.nodes:
+				self.nodes.append(radio.SENDERID)
+				self.nodes.sort()
+				print(f"Node {radio.SENDERID} has joined the network.")
+
+			#We've received and responded to a message, now wait for another
+			radio.receiveBegin()
+		time.sleep(TOSLEEP)
+
+
+print("Connecting to network...")
+net = network()
+net.login()
+print(f"Connected with ID {net.radio.address}")
 
 # Exit gracefully if SIGINT
 def signal_handler(sig, frame):
 	print("Captured SIGINT, shutting down")
-	radio.shutdown()
+	net.logout()
 	sys.exit(0)
 signal.signal(signal.SIGINT, signal_handler)
 
-print(f"Checking for other modules on network {NETWORK}...")
-radio.send(255) # Ping all modules. Since we're node 0 they'll ping us back
-radio.receiveBegin()
-timedOut = 0
-NET_NODES = []
-NODE = 1
-while timedOut < TIMEOUT:
-	if radio.receiveDone():
-		print(f"Response from node {radio.SENDERID}.")
-		NET_NODES.append(radio.SENDERID)
-		radio.receiveBegin()
-
-	timedOut+=TOSLEEP
-	time.sleep(TOSLEEP)
-
-if not len(NET_NODES):
-	print(f"No nodes found on network {NETWORK}.")
-else:
-	print(f"Found existing nodes: {NET_NODES}")
-
-for i in NET_NODES:
-	if i >= NODE: NODE = i + 1
-
-if NODE >= 255:
-	print(f"Too many nodes on network {NETWORK}! Shutting down.")
-	radio.shutdown()
-	sys.exit(0)
-
-print("Reinitializing radio module...")
-radio.shutdown()
-radio = init_radio(NODE, NETWORK)
-print(f"Broadcasting this node's ID ({NODE})")
-radio.send(255)
-
-# Just wait for other nodes to join
-radio.receiveBegin()
 while True:
-	if radio.receiveDone():
-		print(f"Message received from node {radio.SENDERID}.")
-		if radio.SENDERID == 0:
-			radio.send(radio.SENDERID) #don't need any ACK
-		elif radio.SENDERID not in NET_NODES:
-			NET_NODES.append(radio.SENDERID)
-			print(f"Node {radio.SENDERID} has joined the network.")
-
-		#We've received and responded to a message, now wait for another
-		radio.receiveBegin()
-	time.sleep(TOSLEEP)
+	net.handle()
 
 print("shutting down")
 radio.shutdown()
