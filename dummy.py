@@ -12,7 +12,7 @@ import sys
 TIMEOUT=1
 TOSLEEP=0.01
 NETWORK=1
-NODE = 0 #ID 0 is reserved for new nodes
+NODE = 1
 
 # Initialize radio
 print("Initializing radio module...")
@@ -29,23 +29,21 @@ def signal_handler(sig, frame):
 	sys.exit(0)
 signal.signal(signal.SIGINT, signal_handler)
 
-print(f"Checking for other modules on network {NETWORK}...")
-radio.send(255) # Ping all modules. Since we're node 0 they'll ping us back
+print("Waiting for new nodes to identify themselves...")
 radio.receiveBegin()
-timedOut = 0
-NET_NODES = []
-NODE = 1
-while timedOut < TIMEOUT:
+while True:
 	if radio.receiveDone():
-		print(f"Response from node {radio.SENDERID}.")
-		NET_NODES.append(radio.SENDERID)
+		print(f"Message received from node {radio.SENDERID}.")
+		if radio.SENDERID == 0:
+			print(f"Responding with a ping...", end='')
+			if radio.sendWithRetry(radio.SENDERID):
+				print(" ack received.")
+			else:
+				print(" response timed out.")
+
+		#We've received and responded to a message, now wait for another
 		radio.receiveBegin()
 
-	timedOut+=TOSLEEP
-	time.sleep(TOSLEEP)
-
-if not len(NET_NODES):
-	print(f"No nodes found on network {NETWORK}.")
 
 print("shutting down")
 radio.shutdown()
