@@ -99,4 +99,4 @@ while True:
 	net.handle()
 
 print("shutting down")
-radio.shutdown()
+net.logout()
