@@ -70,15 +70,14 @@ class network(object):
 
 	#handle messages
 	def handle(self):
-		if self.radio.receiveDone():
-			#get info from radio
-			senderid = self.radio.SENDERID
-
-			#Send ACK ASAP, we got the message
-			if self.radio.ACKRequested():
-				self.radio.sendACK(senderid)
-				print(f"Ack sent to {senderid}")
-			elif senderid == 0:
+		#get info from radio
+		senderid = self.radio.SENDERID
+		#Send ACK ASAP, we got the message
+		if self.radio.ACKRequested():
+			self.radio.sendACK(senderid)
+			print(f"Ack sent to {senderid}")
+		elif self.radio.receiveDone():
+			if senderid == 0:
 				self.radio.send(senderid)
 
 			#Update list of nodes
