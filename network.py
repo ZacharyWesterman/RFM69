@@ -39,10 +39,6 @@ class network(object):
 			#We got a response, log the node ID
 			if self.radio.receiveDone():
 				self.nodes.append(self.radio.SENDERID)
-				if self.radio.ACKRequested():
-					self.radio.sendACK()
-					print("sent ack")
-
 				self.radio.receiveBegin()
 
 			timedOut += TOSLEEP
@@ -75,15 +71,19 @@ class network(object):
 	#handle messages
 	def handle(self):
 		if self.radio.receiveDone():
-			if self.radio.SENDERID == 0:
-				if self.radio.sendWithRetry(self.radio.SENDERID): #don't need any ACK
-					print("Responsed with my ID")
-				else:
-					print("ACK not received")
-			elif self.radio.SENDERID not in self.nodes:
-				self.nodes.append(self.radio.SENDERID)
+			#get info from radio
+			senderid = self.radio.SENDERID
+
+			#Send ACK ASAP, we got the message
+			if self.radio.ACKRequested():
+				self.radio.sendACK(senderid)
+				print(f"Ack sent to {senderid}")
+
+			#Update list of nodes
+			if (senderid != 0) and (senderid not in self.nodes):
+				self.nodes.append(senderid)
 				self.nodes.sort()
-				print(f"Node {self.radio.SENDERID} has joined the network.")
+				print(f"Node {senderid} has joined the network.")
 
 			#We've received and responded to a message, now wait for another
 			self.radio.receiveBegin()
@@ -104,6 +104,11 @@ signal.signal(signal.SIGINT, signal_handler)
 
 while True:
 	net.handle()
+	if net.radio.address != 1:
+		if net.radio.sendWithRetry(1, "hello"):
+			print("ack received")
+		else:
+			print("no ack")
 
 print("shutting down")
 net.logout()
