@@ -67,5 +67,20 @@ radio = init_radio(NODE, NETWORK)
 print(f"Broadcasting this node's ID ({NODE})")
 radio.send(255)
 
+# Just wait for other nodes to join
+radio.receiveBegin()
+while True:
+	if radio.receiveDone():
+		print(f"Message received from node {radio.SENDERID}.")
+		if radio.SENDERID == 0:
+			radio.send(radio.SENDERID) #don't need any ACK
+		elif radio.SENDERID not in NET_NODES:
+			NET_NODES.append(radio.SENDERID)
+			print(f"Node {radio.SENDERID} has joined the network.")
+
+		#We've received and responded to a message, now wait for another
+		radio.receiveBegin()
+	time.sleep(TOSLEEP)
+
 print("shutting down")
 radio.shutdown()
