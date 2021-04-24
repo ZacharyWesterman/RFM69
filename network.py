@@ -79,7 +79,7 @@ class network(object):
 				print(f"Node {radio.SENDERID} has joined the network.")
 
 			#We've received and responded to a message, now wait for another
-			radio.receiveBegin()
+			self.radio.receiveBegin()
 		time.sleep(TOSLEEP)
 
 
