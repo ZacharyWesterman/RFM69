@@ -12,7 +12,7 @@ import sys
 TIMEOUT=1
 TOSLEEP=0.01
 NETWORK=1
-NODE = 0 #ID 0 is reserved for new nodes
+NODE = 2 #ID 0 is reserved for new nodes
 
 # Initialize radio
 print("Initializing radio module...")
@@ -30,7 +30,7 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 print(f"Checking for other modules on network {NETWORK}...")
-radio.send(255) # Ping all modules. Since we're node 0 they'll ping us back
+radio.send(1) # Ping all modules. Since we're node 0 they'll ping us back
 radio.receiveBegin()
 timedOut = 0
 NET_NODES = []

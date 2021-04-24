@@ -34,12 +34,11 @@ radio.receiveBegin()
 while True:
 	if radio.receiveDone():
 		print(f"Message received from node {radio.SENDERID}.")
-		if radio.SENDERID == 0:
-			print(f"Responding with a ping...", end='')
-			if radio.sendWithRetry(radio.SENDERID):
-				print(" ack received.")
-			else:
-				print(" response timed out.")
+		print(f"Responding with a ping...", end='')
+		if radio.sendWithRetry(radio.SENDERID):
+			print(" ack received.")
+		else:
+			print(" response timed out.")
 
 		#We've received and responded to a message, now wait for another
 		radio.receiveBegin()
