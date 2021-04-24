@@ -43,7 +43,7 @@ while True:
 
 		#We've received and responded to a message, now wait for another
 		radio.receiveBegin()
-
+		time.sleep(TOSLEEP)
 
 print("shutting down")
 radio.shutdown()
