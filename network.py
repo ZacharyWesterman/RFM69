@@ -74,15 +74,9 @@ class network(object):
 			#get info from radio
 			senderid = self.radio.SENDERID
 
-			#Send ACK ASAP, we got the message
-			if self.radio.ACKRequested():
-				self.radio.sendACK(senderid)
-				print(f"Ack sent to {senderid}")
-			elif senderid == 0:
+			if senderid == 0: # New node requesting my ID
 				self.radio.send(senderid)
-
-			#Update list of nodes
-			if (senderid != 0) and (senderid not in self.nodes):
+			elif senderid not in self.nodes: #Update list of nodes
 				self.nodes.append(senderid)
 				self.nodes.sort()
 				print(f"Node {senderid} has joined the network.")
@@ -106,12 +100,12 @@ signal.signal(signal.SIGINT, signal_handler)
 
 while True:
 	net.handle()
-	if net.radio.address != 1:
-		print("sending... ", end='')
-		if net.radio.sendWithRetry(1, "hello"):
-			print("ack received")
-		else:
-			print("no ack")
+	# if net.radio.address != 1:
+	# 	print("sending... ", end='')
+	# 	if net.send(1, "hello"):
+	# 		print("ack received")
+	# 	else:
+	# 		print("no ack")
 
 print("shutting down")
 net.logout()

@@ -207,7 +207,6 @@ class RFM69(object):
             while (time.time() - sentTime) * 1000 < retryWaitTime:
                 if self.ACKReceived(toAddress):
                     return True
-                time.sleep(0.01)
         return False
 
     def ACKReceived(self, fromNodeID):
