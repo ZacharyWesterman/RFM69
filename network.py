@@ -78,6 +78,8 @@ class network(object):
 			if self.radio.ACKRequested():
 				self.radio.sendACK(senderid)
 				print(f"Ack sent to {senderid}")
+			elif senderid == 0:
+				self.radio.send(senderid)
 
 			#Update list of nodes
 			if (senderid != 0) and (senderid not in self.nodes):
@@ -105,6 +107,7 @@ signal.signal(signal.SIGINT, signal_handler)
 while True:
 	net.handle()
 	if net.radio.address != 1:
+		print("sending... ", end='')
 		if net.radio.sendWithRetry(1, "hello"):
 			print("ack received")
 		else:
