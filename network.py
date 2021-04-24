@@ -72,11 +72,11 @@ class network(object):
 	def handle(self):
 		if self.radio.receiveDone():
 			if self.radio.SENDERID == 0:
-				self.radio.send(radio.SENDERID) #don't need any ACK
+				self.radio.send(self.radio.SENDERID) #don't need any ACK
 			elif self.radio.SENDERID not in self.nodes:
-				self.nodes.append(radio.SENDERID)
+				self.nodes.append(self.radio.SENDERID)
 				self.nodes.sort()
-				print(f"Node {radio.SENDERID} has joined the network.")
+				print(f"Node {self.radio.SENDERID} has joined the network.")
 
 			#We've received and responded to a message, now wait for another
 			self.radio.receiveBegin()
