@@ -73,7 +73,7 @@ class network(object):
 		if self.radio.receiveDone():
 			if self.radio.SENDERID == 0:
 				self.radio.send(radio.SENDERID) #don't need any ACK
-			elif radio.SENDERID not in self.nodes:
+			elif self.radio.SENDERID not in self.nodes:
 				self.nodes.append(radio.SENDERID)
 				self.nodes.sort()
 				print(f"Node {radio.SENDERID} has joined the network.")
