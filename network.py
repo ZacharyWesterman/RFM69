@@ -39,7 +39,7 @@ while timedOut < TIMEOUT:
 	if radio.receiveDone():
 		print(f"Response from node {radio.SENDERID}.")
 		NET_NODES.append(radio.SENDERID)
-		if radio.ACKRequested(): radio.sendACK()
+		if radio.ACKRequested(): radio.sendACK(radio.SENDERID)
 		radio.receiveBegin()
 
 	timedOut+=TOSLEEP
