@@ -15,12 +15,12 @@ NODE = 0 #ID 0 is reserved for new nodes
 ENCRYPTION_KEY = "3141592653589793"
 
 class network(object):
-	def __init__(network = 1):
+	def __init__(self, network = 1):
 		self.network = network
 		self.nodes = []
 		self.name = ""
 
-	def init_radio(node, network):
+	def init_radio(self, node, network):
 		global ENCRYPTION_KEY
 		self.radio = RFM69.RFM69(RF69_915MHZ, node, network, True)
 		self.radio.readAllRegs()
@@ -28,7 +28,7 @@ class network(object):
 		self.radio.setHighPower(True)
 		self.radio.encrypt(ENCRYPTION_KEY)
 
-	def login():
+	def login(self):
 		global TOSLEEP
 		self.init_radio(0, self.network)
 		self.radio.send(255) # Ping all modules. Since we're node 0 they'll ping us back
@@ -64,12 +64,12 @@ class network(object):
 		# Be ready to receive
 		self.radio.receiveBegin()
 
-	def logout():
+	def logout(self):
 		# TODO: let other nodes know you're not there anymore
 		self.radio.shutdown()
 
 	#handle messages
-	def handle():
+	def handle(self):
 		if self.radio.receiveDone():
 			if self.radio.SENDERID == 0:
 				self.radio.send(radio.SENDERID) #don't need any ACK
