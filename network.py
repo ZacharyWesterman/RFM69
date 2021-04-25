@@ -19,7 +19,8 @@ class network(object):
 		self.network = network
 		self.nodes = []
 		self.name = ""
-		self.outgoing = []
+		self.outgoing = {}
+		self.incoming = {}
 
 	def init_radio(self, node, network):
 		global ENCRYPTION_KEY
@@ -32,7 +33,7 @@ class network(object):
 	def login(self, name = "unkn"):
 		global TOSLEEP
 		self.init_radio(0, self.network)
-		self.radio.send(255) # Ping all modules. Since we're node 0 they'll ping us back
+		self.radio.send(255, '', True) # Ping all modules, and request ACK
 		self.radio.receiveBegin()
 		timedOut = 0
 		self.nodes = []
@@ -60,7 +61,7 @@ class network(object):
 		# Reinitialize radio module and broadcast new ID
 		self.radio.shutdown()
 		self.init_radio(newID, self.network)
-		self.radio.send(255)
+		self.radio.send(255) # Ping with new ID, don't need an ACK
 
 		# Be ready to receive
 		self.radio.receiveBegin()
@@ -72,10 +73,13 @@ class network(object):
 	#handle messages
 	def handle(self):
 		if self.radio.receiveDone():
-			#get info from radio
+			#Cache last message from radio
 			senderid = self.radio.SENDERID
-			self.radio.send(senderid) #always send an ACK
-			print("sent ACK")
+			incoming[senderid] = self.radio.DATA
+
+			if self.radio.ACKRequested():
+				self.radio.sendACK(senderid) #Send ACK if requested
+				print("sent ACK")
 
 			if senderid == 0: # New node requesting my ID
 				pass
@@ -91,14 +95,13 @@ class network(object):
 		time.sleep(TOSLEEP)
 
 	def send(self, dest, msg):
-		self.radio.send(dest, msg) # Send message to a specific module
-		self.radio.receiveBegin()
+		self.radio.send(dest, msg, True) # Send message to a specific module, request ACK
 
 		#wait 1 second for ACK
 		timedOut = 0
-		while timedOut < 1:
+		while timedOut < 2:
 			#We got a response, log the node ID
-			if self.radio.receiveDone():
+			if self.radio.ACKReceived(dest):
 				print("Ack received")
 				return True
 
