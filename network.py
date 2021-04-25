@@ -19,6 +19,7 @@ class network(object):
 		self.network = network
 		self.nodes = []
 		self.name = ""
+		self.outgoing = []
 
 	def init_radio(self, node, network):
 		global ENCRYPTION_KEY
@@ -73,17 +74,40 @@ class network(object):
 		if self.radio.receiveDone():
 			#get info from radio
 			senderid = self.radio.SENDERID
+			self.radio.send(senderid) #always send an ACK
+			print("sent ACK")
 
 			if senderid == 0: # New node requesting my ID
-				self.radio.send(senderid)
+				pass
+				# self.radio.send(senderid)
 			elif senderid not in self.nodes: #Update list of nodes
 				self.nodes.append(senderid)
 				self.nodes.sort()
 				print(f"Node {senderid} has joined the network.")
 
+
 			#We've received and responded to a message, now wait for another
 			self.radio.receiveBegin()
 		time.sleep(TOSLEEP)
+
+	def send(self, dest, msg):
+		self.radio.send(dest, msg) # Send message to a specific module
+		self.radio.receiveBegin()
+
+		#wait 1 second for ACK
+		timedOut = 0
+		while timedOut < 1:
+			#We got a response, log the node ID
+			if self.radio.receiveDone():
+				print("Ack received")
+				return True
+
+			timedOut += TOSLEEP
+			time.sleep(TOSLEEP)
+
+		print("Message not sent.")
+		return False
+
 
 
 print("Connecting to network...")
@@ -100,12 +124,12 @@ signal.signal(signal.SIGINT, signal_handler)
 
 while True:
 	net.handle()
-	# if net.radio.address != 1:
-	# 	print("sending... ", end='')
-	# 	if net.send(1, "hello"):
-	# 		print("ack received")
-	# 	else:
-	# 		print("no ack")
+	if net.radio.address != 1:
+		print("sending... ", end='')
+		if net.send(1, "hello"):
+			print("ack received")
+		else:
+			print("no ack")
 
 print("shutting down")
 net.logout()
