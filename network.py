@@ -91,8 +91,10 @@ class network(object):
 
 
 			#We've received and responded to a message, now wait for another
+			time.sleep(TOSLEEP)
 			self.radio.receiveBegin()
-		time.sleep(TOSLEEP)
+		else:
+			time.sleep(TOSLEEP)
 
 	def send(self, dest, msg):
 		self.radio.send(dest, msg, True) # Send message to a specific module, request ACK
