@@ -75,7 +75,7 @@ class network(object):
 		if self.radio.receiveDone():
 			#Cache last message from radio
 			senderid = self.radio.SENDERID
-			incoming[senderid] = self.radio.DATA
+			self.incoming[senderid] = self.radio.DATA
 
 			if self.radio.ACKRequested():
 				self.radio.sendACK(senderid) #Send ACK if requested
