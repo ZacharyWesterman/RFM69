@@ -82,8 +82,8 @@ class network(object):
 				print("sent ACK")
 
 			if senderid == 0: # New node requesting my ID
-				pass
-				# self.radio.send(senderid)
+				# pass
+				self.radio.send(senderid)
 			elif senderid not in self.nodes: #Update list of nodes
 				self.nodes.append(senderid)
 				self.nodes.sort()
